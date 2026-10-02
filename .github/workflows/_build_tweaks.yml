@@ -43,6 +43,11 @@ on:
         required: false
         default: ""
 
+      suppress_local_network_prompt:
+        type: boolean
+        required: false
+        default: false
+
       tweak_url:
         type: string
         required: false
@@ -109,6 +114,14 @@ jobs:
             echo "::error::Validation failed: The file is not a valid DEB file. Detected type: $file_type."
             exit 1
           fi
+
+      - name: Download local network prompt workaround
+        if: ${{ inputs.suppress_local_network_prompt }}
+        run: |
+          curl --fail --silent --show-error --location \
+            "https://poomsmart.github.io/repo/debs/youtube/retired/com.ps.ytnochecklocalnetwork_1.0.0_iphoneos-arm.deb" \
+            --output ytnochecklocalnetwork.deb
+          echo "940d14bdfbf1b8d31fccfb1173faf233957e631736ebdcbaeff326ca46cf20e8  ytnochecklocalnetwork.deb" | shasum -a 256 --check
 
       - name: Clone YouTubeHeader
         if: ${{ inputs.enable_youpip || inputs.enable_ytuhd || inputs.enable_yq || inputs.enable_ryd || inputs.enable_ytabc || inputs.enable_demc }}

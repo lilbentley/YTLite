@@ -45,6 +45,12 @@ on:
         required: true
         default: false
 
+      suppress_local_network_prompt:
+        description: "Suppress the repeated Local Network permission screen (does not fix device discovery)"
+        type: boolean
+        required: true
+        default: true
+
       ipa_url:
         description: "URL to the decrypted IPA file"
         default: ""
@@ -53,7 +59,7 @@ on:
 
       tweak_version:
         description: "The version of the tweak to use. Enter the version manually from dayanch96/YTLite/releases or leave default"
-        default: "5.2.2"
+        default: "5.2b4"
         required: true
         type: string
 
@@ -90,6 +96,7 @@ jobs:
       enable_ytabc: ${{ inputs.enable_ytabc }}
       enable_demc: ${{ inputs.enable_demc }}
       enable_localization: ${{ inputs.enable_localization }}
+      suppress_local_network_prompt: ${{ inputs.suppress_local_network_prompt }}
       tweak_version: ${{ inputs.tweak_version }}
 
   package:
@@ -109,7 +116,7 @@ jobs:
       - name: Hide sensitive inputs
         uses: levibostian/action-hide-sensitive-inputs@v1
         with:
-          exclude_inputs: bundle_id,display_name,enable_demc,enable_ryd,enable_ytabc,enable_youpip,enable_yq,enable_ytuhd,enable_localization,info_note,tweak_version
+          exclude_inputs: bundle_id,display_name,enable_demc,enable_ryd,enable_ytabc,enable_youpip,enable_yq,enable_ytuhd,enable_localization,suppress_local_network_prompt,info_note,tweak_version
 
       - name: Download and validate IPA
         run: |

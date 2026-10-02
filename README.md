@@ -5,6 +5,7 @@ A flexible enhancer for YouTube on iOS, featuring over hundred customizable opti
 - [Screenshots](#screenshots)
 - [Main Features](#main-features)
 - [FAQ](#faq)
+- [Local Network permission prompt workaround](#local-network-permission-prompt-workaround)
 - [Reviews](#reviews)
 - [How to build a YouTube Plus app using GitHub Actions](#how-to-build-a-youtube-plus-app-using-github-actions)
 - [Supported YouTube Version](#supported-youtube-version)
@@ -60,6 +61,16 @@ A flexible enhancer for YouTube on iOS, featuring over hundred customizable opti
 - [🇷🇺 ЧаВо на Русском](FAQs/FAQ_RU.md)
 - [🇮🇹 FAQ in Italiano](FAQs/FAQ_IT.md)
 - [🇵🇱 FAQ po polsku](FAQs/FAQ_PL.md)
+
+## Local Network permission prompt workaround
+
+The build workflows in this fork include a **Suppress the repeated Local Network permission screen** option, enabled by default. It adds PoomSmart's [YTNoCheckLocalNetwork](https://poomsmart.github.io/repo/depictions/ytnochecklocalnetwork.html) tweak to the IPA, Cyan file, or TrollFools archive. The helper downloads version 1.0.0 from PoomSmart's repository and verifies its SHA-256 checksum before packaging it. Turn the option off to build without this extra tweak.
+
+The tweak disables `YTHotConfig.isPromptForLocalNetworkPermissionsEnabled`. It targets the repeated permission screen reported with [YouTube Plus 5.2b4 and SmartTube](https://github.com/dayanch96/YTLite/issues/726), even when iOS Local Network access is already enabled. Keep that iOS permission enabled. This legacy hook still needs device testing with YouTube 21.12.4; a successful build does not confirm that the screen is suppressed at runtime.
+
+This option does not grant the multicast signing entitlement or restore automatic Cast/AirPlay discovery. For SmartTube, use **Settings > Watch on TV > Link with TV code** and follow the [SmartTube pairing instructions](https://github.com/yuliskov/SmartTube#casting). Repeated pairing may still be necessary. See the [casting and signing discussion](https://github.com/dayanch96/YTLite/issues/334) for the separate discovery issue.
+
+The version-based workflows default to the last officially free tweak, **5.2b4**. After changing the prompt option, build a new IPA and install it to apply the change; an already installed app is not modified.
 
 ## Reviews
 Review by [@qbap](https://github.com/qbap) on ONE Jailbreak: https://onejailbreak.com/blog/youtube-plus/
