@@ -103,6 +103,8 @@ static void CheckDenied(MDXLocalNetworkPermissions *permissions) {
     [permissions verifyAccessWithCompletion:^(NSInteger result) {
         Require(result == YTLNFDenied && [permissions lastKnownPermissionsStatus] == YTLNFDenied,
                 "denial must remain denied and replace previously allowed cache");
+        Require(permissions.notifications == 1, "hook must leave notifications to the native caller");
+        [permissions notifyStatusChangeObservers:result];
         Require(permissions.notifications == 2 && permissions.notifiedStatus == YTLNFDenied,
                 "permission revocation must notify native observers");
         CheckUnknown(permissions);
@@ -142,6 +144,8 @@ int main(void) {
         [permissions verifyAccessWithCompletion:^(NSInteger result) {
             Require(result == YTLNFAllowed && [permissions lastKnownPermissionsStatus] == YTLNFAllowed,
                     "successful Bonjour must recover a cached multicast denial");
+            Require(permissions.notifications == 0, "hook must not duplicate native caller notifications");
+            [permissions notifyStatusChangeObservers:result];
             Require(permissions.notifications == 1 && permissions.notifiedStatus == YTLNFAllowed,
                     "successful recovery must notify native observers");
             CheckDenied(permissions);

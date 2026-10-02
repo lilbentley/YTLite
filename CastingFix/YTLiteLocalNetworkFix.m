@@ -111,13 +111,12 @@ static void VerifyAccess(id owner, SEL command, void (^completion)(NSInteger)) {
                 id instance = ((id (*)(id, SEL))objc_msgSend)(environment, @selector(sharedInstance));
                 id storage = ((id (*)(id, SEL))objc_msgSend)(instance, @selector(localStorage));
                 if ([storage respondsToSelector:@selector(setLocalNetworkPermissionsStatus:)]) {
-                    NSInteger previous = ((NSInteger (*)(id, SEL))objc_msgSend)(storage, @selector(localNetworkPermissionsStatus));
                     ((void (*)(id, SEL, NSInteger))objc_msgSend)(storage, @selector(setLocalNetworkPermissionsStatus:), status);
-                    if (previous != status) {
-                        ((void (*)(id, SEL, NSInteger))objc_msgSend)(owner, @selector(notifyStatusChangeObservers:), status);
-                    }
                 }
             }
+            // Native callers (including verifyPermissionsIfPreviouslyAsked)
+            // notify their observers from this completion. Do not notify here
+            // as well, which would duplicate the original callback's effect.
             // Unknown preserves the native cache, as the original wrapper did.
             NSInteger result = status == YTLNFUnknown
                 ? ((NSInteger (*)(id, SEL))objc_msgSend)(owner, @selector(lastKnownPermissionsStatus))

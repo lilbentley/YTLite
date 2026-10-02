@@ -5,7 +5,7 @@ This experimental patch targets YouTube 21.12.4 with YouTube Plus 5.2b4. Enable 
 ## What changes
 
 1. `MDXLocalNetworkPermissions.verifyAccessWithCompletion:` runs a system Bonjour browse for the already declared `_googlecast._tcp` service. A ready browser reports allowed; the DNS policy-denied error reports denied. Other failures and a 30-second timeout preserve YouTube's previous permission state. No actual TV needs to be discovered to determine whether browsing is permitted.
-2. A successful or explicitly denied browse updates YouTube's native permission cache and notifies its existing observers when the state changes. A previous multicast failure no longer prevents a fresh permission check. Completion runs on the main queue and is delivered once.
+2. A successful or explicitly denied browse updates YouTube's native permission cache and returns the result to its existing callers, which handle observer notifications. A previous multicast failure no longer prevents a fresh permission check. Completion runs on the main queue and is delivered once; the hook does not duplicate the native caller's notifications.
 3. The `GCKCastDeviceMDNSScanner` browser factory takes its existing non-custom-multicast branch, constructing `GCKBonjourServiceBrowser`. All other arguments and the original return value are preserved. This uses the existing Cast SDK discovery implementation, rather than reimplementing Chromecast connections.
 
 The patch checks every private method's return type, argument count and argument types before installing either hook. A mismatch disables both hooks and writes a console message. It does not patch binary addresses or report permission as allowed unconditionally. The dylib requires iOS 15 or later.
