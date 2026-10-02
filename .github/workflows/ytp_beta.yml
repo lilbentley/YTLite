@@ -46,10 +46,10 @@ on:
         default: false
 
       suppress_local_network_prompt:
-        description: "Suppress the repeated Local Network permission screen (does not fix device discovery)"
+        description: "Legacy Local Network prompt hook (ineffective with YouTube 21.12.4)"
         type: boolean
         required: true
-        default: true
+        default: false
 
       ipa_url:
         description: "URL to the decrypted IPA file"
