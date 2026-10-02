@@ -64,6 +64,8 @@ A flexible enhancer for YouTube on iOS, featuring over hundred customizable opti
 
 ## Local Network permission prompt workaround
 
+The version-based app workflow now includes a separate **Use Bonjour permission checking and Cast discovery** option. It builds the source in [CastingFix](CastingFix/README.md), replaces the current permission probe, and selects Cast's system Bonjour discovery browser. This targets the inspected YouTube **21.12.4** executable; it remains experimental until tested on an iPhone. Keep the iOS Local Network permission enabled. A/B configuration is not needed for this patch.
+
 **The legacy prompt hook failed on YouTube 21.12.4 + YouTube Plus 5.2b4 installed through AltStore.** Build (5) included the library, but the device still displayed the permission screen. The workflow option is now disabled by default and explicitly labelled as a legacy hook.
 
 If enabled, the option adds PoomSmart's [YTNoCheckLocalNetwork](https://poomsmart.github.io/repo/depictions/ytnochecklocalnetwork.html) version 1.0.0, downloaded from its official repository with SHA-256 verification. It changes `YTHotConfig.isPromptForLocalNetworkPermissionsEnabled`. Scanning all seven Mach-O files in the original 21.12.4 IPA found no reference to that selector. The app contains newer `MDXLocalNetworkPermissions` checks instead. A successful build and a packaged library do not establish that a hook affects the current app.
@@ -84,7 +86,7 @@ The [upstream casting discussion](https://github.com/dayanch96/YTLite/issues/334
 
 For SmartTube, open the TV app and pair through **Settings > Watch on TV > Link with TV code** using its [pairing instructions](https://github.com/yuliskov/SmartTube#casting). SmartTube does not support automatic discovery; the native permission-screen issue can still affect access to the menu. For AirPlay, try the system route picker through Control Centre while a video plays.
 
-The version-based workflows default to the last officially free tweak, **5.2b4**. That does not certify casting compatibility with a given YouTube version. A modern fix would need to address the current permission probe and discovery path; the legacy hook in this draft is not that fix.
+The version-based workflows default to the last officially free tweak, **5.2b4**. That does not certify casting compatibility with a given YouTube version. The modern source patch addresses the current probe and discovery path, while the optional legacy hook remains ineffective for this pairing.
 
 ## Reviews
 Review by [@qbap](https://github.com/qbap) on ONE Jailbreak: https://onejailbreak.com/blog/youtube-plus/
