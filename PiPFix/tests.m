@@ -171,7 +171,7 @@ int main(void) {
         timeout.pipController.readyAfter = 0;
         __block NSUInteger failures = 0;
         YPCRequest(timeout, ^(NSString *reason) { assert([reason containsString:@"two seconds"]); failures++; });
-        Pump(2.3);
+        Pump(2.8);
         assert(failures == 1 && !objc_getAssociatedObject(timeout, &YPCPendingKey));
         timeout.pipController = nil;
         failure = nil;

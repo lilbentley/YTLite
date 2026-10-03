@@ -40,7 +40,7 @@ static char YPCPendingKey;
 @property(nonatomic, strong) id controller;
 @property(nonatomic, strong) id video;
 @property(nonatomic, copy) YPCFailure failure;
-@property(nonatomic) NSUInteger remaining;
+@property(nonatomic) NSTimeInterval deadline;
 @property(nonatomic) BOOL finished;
 - (void)step;
 @end
@@ -60,6 +60,10 @@ static char YPCPendingKey;
 }
 - (void)step {
     if (self.finished) return;
+    if (NSProcessInfo.processInfo.systemUptime >= self.deadline) {
+        [self fail:@"iOS did not make the video renderer ready for PiP within two seconds."];
+        return;
+    }
     if (YPCRead(self.controller, @"_singleVideo") != self.video) {
         [self fail:@"The playing video changed before PiP was ready."];
         return;
@@ -72,9 +76,19 @@ static char YPCPendingKey;
     // Preserve the complete native gate: external playback, embargo, disabled
     // player traits, renderer compatibility and media playability all remain.
     if (!YPCBool(self.controller, @"canEnablePictureInPicture")) {
-        NSString *reason = YPCBool(self.video, @"isExternalPlaybackActive")
-            ? @"YouTube still reports TV or AirPlay playback as active."
-            : @"YouTube's native player rejected PiP for this video.";
+        NSString *reason = @"YouTube's native player rejected PiP for this video.";
+        id nativePiP = YPCRead(self.controller, @"_pipController");
+        if (YPCBool(self.video, @"isExternalPlaybackActive"))
+            reason = @"YouTube still reports TV or AirPlay playback as active.";
+        else if (YPCBool(self.controller, @"isPictureInPictureForceDisabled"))
+            reason = @"YouTube disabled PiP support for the current player.";
+        else if ([YPCRead(self.controller, @"_embargoActive") boolValue])
+            reason = @"YouTube is blocking PiP during an ad or playback restriction.";
+        else if (YPCBool(YPCRead(self.video, @"videoData"), @"needsGLRendering"))
+            reason = @"This video uses a renderer that YouTube cannot put in PiP.";
+        else if (YPCSignature(nativePiP, @"pictureInPictureSupported", "B", 2) &&
+                 !YPCBool(nativePiP, @"pictureInPictureSupported"))
+            reason = @"iOS reports that PiP is unsupported on this device.";
         [self fail:reason];
         return;
     }
@@ -96,10 +110,6 @@ static char YPCPendingKey;
         YPCVoid(avpip, @"startPictureInPicture");
         return;
     }
-    if (!self.remaining--) {
-        [self fail:@"iOS did not make the video renderer ready for PiP within two seconds."];
-        return;
-    }
     dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 100 * NSEC_PER_MSEC),
                    dispatch_get_main_queue(), ^{ [self step]; });
 }
@@ -115,7 +125,7 @@ static void YPCRequest(id controller, YPCFailure failure) {
     attempt.controller = controller;
     attempt.video = YPCRead(controller, @"_singleVideo");
     attempt.failure = failure;
-    attempt.remaining = 20;
+    attempt.deadline = NSProcessInfo.processInfo.systemUptime + 2.0;
     objc_setAssociatedObject(controller, &YPCPendingKey, attempt, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
     [attempt step];
 }
