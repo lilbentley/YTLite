@@ -43,6 +43,16 @@ on:
         required: false
         default: ""
 
+      suppress_local_network_prompt:
+        type: boolean
+        required: false
+        default: false
+
+      fix_casting_local_network:
+        type: boolean
+        required: false
+        default: false
+
       tweak_url:
         type: string
         required: false
@@ -55,7 +65,7 @@ jobs:
 
     steps:
       - uses: actions/checkout@v6
-        if: ${{ inputs.enable_localization }}
+        if: ${{ inputs.enable_localization || inputs.fix_casting_local_network || inputs.enable_youpip }}
 
       - name: Install Dependencies
         run: brew install make ldid dpkg
@@ -110,6 +120,25 @@ jobs:
             exit 1
           fi
 
+      - name: Download local network prompt workaround
+        if: ${{ inputs.suppress_local_network_prompt }}
+        run: |
+          curl --fail --silent --show-error --location \
+            "https://poomsmart.github.io/repo/debs/youtube/retired/com.ps.ytnochecklocalnetwork_1.0.0_iphoneos-arm.deb" \
+            --output ytnochecklocalnetwork.deb
+          echo "940d14bdfbf1b8d31fccfb1173faf233957e631736ebdcbaeff326ca46cf20e8  ytnochecklocalnetwork.deb" | shasum -a 256 --check
+
+      - name: Test modern casting fix
+        if: ${{ inputs.fix_casting_local_network }}
+        run: |
+          xcrun clang -fobjc-arc -fblocks -Wall -Wextra -Werror \
+            -framework Foundation -framework Network CastingFix/tests.m -o casting-fix-tests
+          ./casting-fix-tests
+
+      - name: Build modern casting fix
+        if: ${{ inputs.fix_casting_local_network }}
+        run: bash CastingFix/build.sh
+
       - name: Clone YouTubeHeader
         if: ${{ inputs.enable_youpip || inputs.enable_ytuhd || inputs.enable_yq || inputs.enable_ryd || inputs.enable_ytabc || inputs.enable_demc }}
         run: |
@@ -134,7 +163,19 @@ jobs:
 
       - name: Clone YouPiP
         if: ${{ inputs.enable_youpip }}
-        run: git clone --quiet --depth=1 https://github.com/PoomSmart/YouPiP.git
+        run: |
+          git init --quiet YouPiP
+          git -C YouPiP remote add origin https://github.com/PoomSmart/YouPiP.git
+          git -C YouPiP fetch --quiet --depth=1 origin 787806b3a88a02aecdd59b6dc2906c935cc1744d
+          git -C YouPiP checkout --quiet --detach FETCH_HEAD
+          python3 PiPFix/apply.py YouPiP
+
+      - name: Test PiP compatibility
+        if: ${{ inputs.enable_youpip }}
+        run: |
+          xcrun clang -fobjc-arc -fblocks -Wall -Wextra -Werror \
+            -framework Foundation PiPFix/tests.m -o pip-compatibility-tests
+          ./pip-compatibility-tests
 
       - name: Clone YTUHD
         if: ${{ inputs.enable_ytuhd }}

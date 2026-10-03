@@ -5,6 +5,7 @@ A flexible enhancer for YouTube on iOS, featuring over hundred customizable opti
 - [Screenshots](#screenshots)
 - [Main Features](#main-features)
 - [FAQ](#faq)
+- [Local Network permission prompt workaround](#local-network-permission-prompt-workaround)
 - [Reviews](#reviews)
 - [How to build a YouTube Plus app using GitHub Actions](#how-to-build-a-youtube-plus-app-using-github-actions)
 - [Supported YouTube Version](#supported-youtube-version)
@@ -60,6 +61,32 @@ A flexible enhancer for YouTube on iOS, featuring over hundred customizable opti
 - [🇷🇺 ЧаВо на Русском](FAQs/FAQ_RU.md)
 - [🇮🇹 FAQ in Italiano](FAQs/FAQ_IT.md)
 - [🇵🇱 FAQ po polsku](FAQs/FAQ_PL.md)
+
+## Local Network permission prompt workaround
+
+The version-based app workflow now includes a separate **Use Bonjour permission checking and Cast discovery** option. It builds the source in [CastingFix](CastingFix/README.md), replaces the current permission probe, and selects Cast's system Bonjour discovery browser. This targets the inspected YouTube **21.12.4** executable; it remains experimental until tested on an iPhone. Keep the iOS Local Network permission enabled. A/B configuration is not needed for this patch.
+
+**The legacy prompt hook failed on YouTube 21.12.4 + YouTube Plus 5.2b4 installed through AltStore.** Build (5) included the library, but the device still displayed the permission screen. The workflow option is now disabled by default and explicitly labelled as a legacy hook.
+
+If enabled, the option adds PoomSmart's [YTNoCheckLocalNetwork](https://poomsmart.github.io/repo/depictions/ytnochecklocalnetwork.html) version 1.0.0, downloaded from its official repository with SHA-256 verification. It changes `YTHotConfig.isPromptForLocalNetworkPermissionsEnabled`. Scanning all seven Mach-O files in the original 21.12.4 IPA found no reference to that selector. The app contains newer `MDXLocalNetworkPermissions` checks instead. A successful build and a packaged library do not establish that a hook affects the current app.
+
+Static inspection of the 5.2b4 library also found that it already installs these three `YTColdConfig` overrides, matching the older [YTLitePlus casting workaround](https://github.com/YTLitePlus/YTLitePlus/blob/main/YTLitePlus.xm):
+
+| Flag | Hook return value |
+| --- | --- |
+| `cxClientEnableIosLocalNetworkPermissionReliabilityFixes` | `YES` |
+| `cxClientEnableIosLocalNetworkPermissionUsingSockets` | `NO` |
+| `cxClientEnableIosLocalNetworkPermissionWifiFixes` | `YES` |
+
+Adding those same overrides again is not a new fix. If A/B settings were changed manually, disable YTABConfig and fully restart the app to test without its saved overrides.
+
+The original and built IPAs both already declare `NSLocalNetworkUsageDescription` and the `_googlecast._tcp` / `_233637DE._googlecast._tcp` Bonjour services. Their presence does not establish the capabilities of the app after AltStore signs it. Apple distinguishes the user's Local Network permission from the separate [multicast signing entitlement](https://developer.apple.com/documentation/bundleresources/entitlements/com.apple.developer.networking.multicast). Raw multicast/broadcast requires the entitlement; browsing declared Bonjour services and using the system AirPlay picker can avoid that requirement. See [Apple TN3179](https://developer.apple.com/documentation/technotes/tn3179-understanding-local-network-privacy) and [Google's Cast discovery documentation](https://developers.google.com/cast/docs/ios_sender/permissions_and_discovery).
+
+The [upstream casting discussion](https://github.com/dayanch96/YTLite/issues/334) reports that YouTube 20.10.4 works where newer versions fail, and that correctly provisioned multicast signing can restore discovery on newer versions. These are device reports, not a guarantee for every iOS version; another report describes an empty cast menu on 20.10.4 with AltStore and an iOS 26 beta. The signed app and its provisioning profile must both authorize multicast. Adding an entitlement string to this build workflow cannot grant that capability.
+
+For SmartTube, open the TV app and pair through **Settings > Watch on TV > Link with TV code** using its [pairing instructions](https://github.com/yuliskov/SmartTube#casting). SmartTube does not support automatic discovery; the native permission-screen issue can still affect access to the menu. For AirPlay, try the system route picker through Control Centre while a video plays.
+
+The version-based workflows default to the last officially free tweak, **5.2b4**. That does not certify casting compatibility with a given YouTube version. The modern source patch addresses the current probe and discovery path, while the optional legacy hook remains ineffective for this pairing.
 
 ## Reviews
 Review by [@qbap](https://github.com/qbap) on ONE Jailbreak: https://onejailbreak.com/blog/youtube-plus/

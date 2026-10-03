@@ -51,9 +51,21 @@ on:
         required: true
         default: false
 
+      suppress_local_network_prompt:
+        description: "Legacy Local Network prompt hook (ineffective with YouTube 21.12.4)"
+        type: boolean
+        required: true
+        default: false
+
+      fix_casting_local_network:
+        description: "Use Bonjour permission checking and Cast discovery (experimental; targets YouTube 21.12.4)"
+        type: boolean
+        required: true
+        default: false
+
       tweak_version:
         description: "The version of the tweak to use. Enter the version manually from dayanch96/YTLite/releases or leave default"
-        default: "5.2.2"
+        default: "5.2b4"
         required: true
         type: string
 
@@ -83,6 +95,8 @@ jobs:
       enable_ryd: ${{ inputs.enable_ryd }}
       enable_ytabc: ${{ inputs.enable_ytabc }}
       enable_demc: ${{ inputs.enable_demc }}
+      suppress_local_network_prompt: ${{ inputs.suppress_local_network_prompt }}
+      fix_casting_local_network: ${{ inputs.fix_casting_local_network }}
       tweak_version: ${{ inputs.tweak_version }}
 
   package:
