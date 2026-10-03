@@ -65,7 +65,7 @@ jobs:
 
     steps:
       - uses: actions/checkout@v6
-        if: ${{ inputs.enable_localization || inputs.fix_casting_local_network }}
+        if: ${{ inputs.enable_localization || inputs.fix_casting_local_network || inputs.enable_youpip }}
 
       - name: Install Dependencies
         run: brew install make ldid dpkg
@@ -163,7 +163,19 @@ jobs:
 
       - name: Clone YouPiP
         if: ${{ inputs.enable_youpip }}
-        run: git clone --quiet --depth=1 https://github.com/PoomSmart/YouPiP.git
+        run: |
+          git init --quiet YouPiP
+          git -C YouPiP remote add origin https://github.com/PoomSmart/YouPiP.git
+          git -C YouPiP fetch --quiet --depth=1 origin 787806b3a88a02aecdd59b6dc2906c935cc1744d
+          git -C YouPiP checkout --quiet --detach FETCH_HEAD
+          python3 PiPFix/apply.py YouPiP
+
+      - name: Test PiP compatibility
+        if: ${{ inputs.enable_youpip }}
+        run: |
+          xcrun clang -fobjc-arc -fblocks -Wall -Wextra -Werror \
+            -framework Foundation PiPFix/tests.m -o pip-compatibility-tests
+          ./pip-compatibility-tests
 
       - name: Clone YTUHD
         if: ${{ inputs.enable_ytuhd }}
